@@ -1,0 +1,30 @@
+#!/usr/bin/env bb
+
+(require '[clojure.java.io :as io]
+         '[clojure.string :as str])
+
+(defn expand-home [s]
+  (if (.startsWith s "~")
+    (clojure.string/replace-first s "~" (System/getProperty "user.home"))
+    s))
+
+(def directory (expand-home "~/.kv/"))
+
+(defn file-name [f]
+  (str directory f))
+
+(defn file-db-get [k]
+  (let [f (io/file (file-name k))]
+    (if (.exists f) (slurp (file-name k))
+        "")))
+
+(defn file-db-set [k v]
+  (spit (file-name k) v))
+
+(if-not (.exists (io/file directory))
+  (.mkdir (java.io.File. directory)))
+
+(let [args *command-line-args*]
+  (if (= 1 (count args))
+    (println (file-db-get (first args)))
+    (file-db-set (first args) (str/join " " (rest args)))))
